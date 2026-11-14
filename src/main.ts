@@ -63,6 +63,22 @@ themeBtn.addEventListener('click', () => {
   themeBtn.textContent = nightMode ? 'Standard Mode' : 'Night Mode';
 });
 
+const IDLE_TIMEOUT_MS = 3000;
+let idleTimer: number | undefined;
+
+function resetIdleTimer(): void {
+  document.body.classList.remove('idle');
+  window.clearTimeout(idleTimer);
+  idleTimer = window.setTimeout(() => {
+    document.body.classList.add('idle');
+  }, IDLE_TIMEOUT_MS);
+}
+
+for (const event of ['mousemove', 'mousedown', 'pointerdown', 'touchstart', 'keydown'] as const) {
+  window.addEventListener(event, resetIdleTimer, { passive: true });
+}
+
 secondsBtn.textContent = 'Hide Seconds';
 render();
+resetIdleTimer();
 setInterval(render, 250);
