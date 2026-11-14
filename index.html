@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StandBy Clock</title>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="clock-card" aria-label="Digital Clock">
+        <div class="date-row" id="date"></div>
+        <div class="time-row">
+          <span class="digits" id="hours">00</span>
+          <span class="colon" id="colon">:</span>
+          <span class="digits" id="minutes">00</span>
+          <span class="seconds" id="seconds">00</span>
+          <span class="ampm" id="ampm"></span>
+        </div>
+        <div class="controls" aria-label="Clock controls">
+          <button type="button" id="toggle-format" class="pill">24H</button>
+          <button type="button" id="toggle-seconds" class="pill">Seconds</button>
+          <button type="button" id="toggle-theme" class="pill">Night Mode</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
