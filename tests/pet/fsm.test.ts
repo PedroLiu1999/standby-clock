@@ -299,7 +299,7 @@ describe('PetController FSM & Physics Integration', () => {
 
     pet.dispatch({ type: 'jump', direction: 1 }, body);
     const jumpAction = pet.step(body, 0.05, [], [], null, { ...DEFAULT_OPTS, reducedMotion: true });
-    expect(jumpAction.impulse).toEqual({ x: 84, y: -320 });
+    expect(jumpAction.impulse).toEqual({ x: 84, y: -360 });
   });
 
   it('performs autonomous platform hop from perched when colliders.length > 1 and random < 0.45', () => {
@@ -335,7 +335,7 @@ describe('PetController FSM & Physics Integration', () => {
     pet.dispatch({ type: 'jump', direction: 1 }, body);
     const action = pet.step(body, 0.05, [], [], null, DEFAULT_OPTS);
     expect(action.snapshot.state).toBe('jumping');
-    expect(action.impulse).toEqual({ x: 140, y: -520 });
+    expect(action.impulse).toEqual({ x: 140, y: -640 });
   });
 
   it('clamps NaN in initialStats to 0 instead of poisoning stats', () => {

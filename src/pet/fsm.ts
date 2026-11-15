@@ -20,8 +20,8 @@ import type {
 export const MAX_DT = 0.05;
 export const PATROL_SPEED = 90;
 export const CHASE_SPEED = 155;
-export const JUMP_VY = -520;
-export const JUMP_VY_REDUCED = -320;
+export const JUMP_VY = -640;
+export const JUMP_VY_REDUCED = -360;
 export const EAT_RADIUS = 34;
 export const EAT_DURATION = 1.2;
 export const HAPPY_DURATION = 1.2;
@@ -481,7 +481,14 @@ export class PetController {
           this.stateTimer = 0;
           this.perchedOnId = null;
         } else if (treat !== null) {
-          const result = this.handleTreatFromGrounded(body, treat, options.reducedMotion, emitHere);
+          const result = this.handleTreatFromGrounded(
+            body,
+            treat,
+            colliders,
+            perchedCollider,
+            options.reducedMotion,
+            emitHere
+          );
           if (result.consumed) {
             consumedTreat = true;
           } else if (result.jumpImpulse) {
@@ -522,7 +529,14 @@ export class PetController {
           this.state = 'falling';
           this.stateTimer = 0;
         } else if (treat !== null) {
-          const result = this.handleTreatFromGrounded(body, treat, options.reducedMotion, emitHere);
+          const result = this.handleTreatFromGrounded(
+            body,
+            treat,
+            colliders,
+            perchedCollider,
+            options.reducedMotion,
+            emitHere
+          );
           if (result.consumed) {
             consumedTreat = true;
           } else if (result.jumpImpulse) {
@@ -562,29 +576,22 @@ export class PetController {
           this.stateTimer = 0;
           targetVx = null;
         } else if (treat !== null) {
-          const centerX = body.x + body.width / 2;
-          const centerY = body.y + body.height / 2;
-          const dx = treat.x - centerX;
-          const dy = treat.y - centerY;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist <= EAT_RADIUS) {
-            this.consumeTreat(emitHere);
+          const result = this.handleTreatFromGrounded(
+            body,
+            treat,
+            colliders,
+            perchedCollider,
+            options.reducedMotion,
+            emitHere
+          );
+          if (result.consumed) {
             consumedTreat = true;
             targetVx = 0;
-          } else {
-            this.facing = dx >= 0 ? 'right' : 'left';
-            targetVx = (this.facing === 'right' ? 1 : -1) * CHASE_SPEED;
-            if (treat.y < body.y - 28 && body.grounded && this.jumpCooldown <= 0) {
-              const jumpVy = options.reducedMotion ? JUMP_VY_REDUCED : JUMP_VY;
-              const jumpVx = clamp(dx * 1.4, -220, 220);
-              impulse = this.combineImpulses(impulse, { x: jumpVx, y: jumpVy });
-              targetVx = null;
-              this.state = 'jumping';
-              this.stateTimer = 0;
-              this.perchedOnId = null;
-              this.jumpCooldown = 0.45;
-            }
+          } else if (result.jumpImpulse) {
+            impulse = this.combineImpulses(impulse, result.jumpImpulse);
+            targetVx = null;
+          } else if (result.targetVx !== null) {
+            targetVx = result.targetVx;
           }
         } else {
           this.inactivitySeconds += elapsedDt;
@@ -675,6 +682,8 @@ export class PetController {
   private handleTreatFromGrounded(
     body: PhysicsBody,
     treat: TreatTarget,
+    colliders: Collider[],
+    perchedCollider: Collider | null,
     reducedMotion: boolean,
     emitHere: (kind: ParticleKind, count: number) => void
   ): { consumed: boolean; jumpImpulse: Vec2 | null; targetVx: number | null } {
@@ -689,15 +698,62 @@ export class PetController {
       return { consumed: true, jumpImpulse: null, targetVx: 0 };
     }
 
-    this.facing = dx >= 0 ? 'right' : 'left';
     if (treat.y < body.y - 28 && body.grounded && this.jumpCooldown <= 0) {
-      const jumpVy = reducedMotion ? JUMP_VY_REDUCED : JUMP_VY;
-      const jumpVx = clamp(dx * 1.4, -220, 220);
+      const heightNeeded = Math.max(0, body.y - treat.y) + 45;
+
+      if (heightNeeded > 260 && colliders.length > 0 && !reducedMotion) {
+        const stepCandidates = colliders.filter(
+          (c) =>
+            (c.kind === 'platform' || c.kind === 'control') &&
+            c.id !== perchedCollider?.id &&
+            c.rect.y < body.y + body.height - 15 &&
+            c.rect.y >= body.y - 260
+        );
+        if (stepCandidates.length > 0) {
+          stepCandidates.sort((a, b) => {
+            const aCenter = a.rect.x + a.rect.width / 2;
+            const bCenter = b.rect.x + b.rect.width / 2;
+            const aScore = Math.abs(aCenter - treat.x) + Math.abs(a.rect.y - treat.y) * 0.5;
+            const bScore = Math.abs(bCenter - treat.x) + Math.abs(b.rect.y - treat.y) * 0.5;
+            return aScore - bScore;
+          });
+          const step = stepCandidates[0];
+          const stepDx = step.rect.x + step.rect.width / 2 - centerX;
+          const stepHeight = Math.max(0, body.y + body.height - step.rect.y) + 40;
+          const stepVy = clamp(-Math.sqrt(2 * 1500 * stepHeight), -940, JUMP_VY);
+          const stepVx = clamp(stepDx * 1.3, -260, 260);
+          this.facing = stepDx >= 0 ? 'right' : 'left';
+          this.state = 'jumping';
+          this.stateTimer = 0;
+          this.perchedOnId = null;
+          this.jumpCooldown = 0.45;
+          return { consumed: false, jumpImpulse: { x: stepVx, y: stepVy }, targetVx: null };
+        }
+      }
+
+      const adaptiveVy = clamp(-Math.sqrt(2 * 1500 * Math.min(heightNeeded, 320)), -980, JUMP_VY);
+      const jumpVy = reducedMotion ? JUMP_VY_REDUCED : adaptiveVy;
+      const jumpVx = clamp(dx * 1.4, -260, 260);
+      this.facing = dx >= 0 ? 'right' : 'left';
       this.state = 'jumping';
       this.stateTimer = 0;
       this.perchedOnId = null;
       this.jumpCooldown = 0.45;
       return { consumed: false, jumpImpulse: { x: jumpVx, y: jumpVy }, targetVx: null };
+    }
+
+    // If perched above a treat that is underneath the platform, walk off the nearest edge
+    if (
+      perchedCollider &&
+      treat.y > perchedCollider.rect.y + perchedCollider.rect.height &&
+      treat.x >= perchedCollider.rect.x - 10 &&
+      treat.x <= perchedCollider.rect.x + perchedCollider.rect.width + 10
+    ) {
+      const distLeft = Math.abs(centerX - perchedCollider.rect.x);
+      const distRight = Math.abs(perchedCollider.rect.x + perchedCollider.rect.width - centerX);
+      this.facing = distLeft <= distRight ? 'left' : 'right';
+    } else {
+      this.facing = dx >= 0 ? 'right' : 'left';
     }
 
     this.state = 'walking';

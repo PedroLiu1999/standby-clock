@@ -239,13 +239,13 @@ togglePetBtn.addEventListener('click', () => {
   persist();
 });
 
-function spawnTreatAt(stageX: number, stageY: number): void {
+function spawnTreatAt(stageX: number, stageY: number, vx = 0): void {
   const bounds = collidersManager.getBounds();
   const maxX = Math.max(0, bounds.width - TREAT_SIZE);
   const maxY = Math.max(0, bounds.height - TREAT_SIZE);
   const clampedX = Math.max(0, Math.min(maxX, stageX));
   const clampedY = Math.max(0, Math.min(maxY, stageY));
-  treat = createTreatBody(clampedX, clampedY, 0, 0, TREAT_SIZE);
+  treat = createTreatBody(clampedX, clampedY, vx, 0, TREAT_SIZE);
   controller.dispatch({ type: 'feed' }, petBody);
   petRenderer.render(petBody, controller.getSnapshot(), treat, [], reducedMotion);
   persist();
@@ -259,10 +259,15 @@ feedPetBtn.addEventListener('click', () => {
     persist();
   }
   const bounds = collidersManager.getBounds();
-  spawnTreatAt(
-    Math.max(0, bounds.width * 0.5 - TREAT_SIZE * 0.5),
-    Math.max(16, bounds.height * 0.15),
+  const petCenterX = petBody.x + petBody.width * 0.5;
+  const offset = (Math.random() * 2 - 1) * 120;
+  const dropX = Math.max(
+    24,
+    Math.min(bounds.width - TREAT_SIZE - 24, petCenterX + offset - TREAT_SIZE * 0.5),
   );
+  const dropY = Math.max(16, petBody.y - 110);
+  const tossVx = (Math.random() * 2 - 1) * 55;
+  spawnTreatAt(dropX, dropY, tossVx);
 });
 
 toggleSleepBtn.addEventListener('click', () => {
