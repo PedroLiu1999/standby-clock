@@ -139,7 +139,12 @@ function renderClock(): void {
   });
   dateEl.textContent = dateText;
 
-  if (ampm !== lastAmpm || dateText !== lastDateText) {
+  if (
+    ampm !== lastAmpm ||
+    dateText !== lastDateText ||
+    rawHours !== lastHour ||
+    minutes !== lastMinute
+  ) {
     lastAmpm = ampm;
     lastDateText = dateText;
     collidersManager.invalidate();

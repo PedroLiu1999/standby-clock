@@ -142,6 +142,7 @@ test.describe('Tier 1 — Pet FSM, Lifecycle & Time Reactions (F5–F7)', () => 
 
       const beforeStorage = await page.evaluate(() => JSON.stringify(localStorage));
 
+      await page.mouse.move(10, 10);
       await getFeedButton(page).click();
       await expect(getTreats(page).first()).toBeVisible();
 
@@ -211,6 +212,7 @@ test.describe('Tier 1 — Pet FSM, Lifecycle & Time Reactions (F5–F7)', () => 
       const sleepBtn = getSleepButton(page);
       const label = (await sleepBtn.textContent()) ?? '';
       if (/wake/i.test(label)) {
+        await page.mouse.move(10, 10);
         await sleepBtn.click();
         await stepClock(page, 100);
       }

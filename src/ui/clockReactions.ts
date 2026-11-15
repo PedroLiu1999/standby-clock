@@ -133,13 +133,14 @@ export class ClockReactions {
   }
 
   private getOrCreate(id: string): SpringNudge | null {
-    const existing = this.active.get(id);
+    const domId = id.split(':')[0];
+    const existing = this.active.get(domId);
     if (existing) return existing;
 
     const escapedId =
       typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-        ? CSS.escape(id)
-        : id;
+        ? CSS.escape(domId)
+        : domId;
     const el = this.stageEl.querySelector<HTMLElement>(`#${escapedId}`);
     if (!el) return null;
 
@@ -152,7 +153,7 @@ export class ClockReactions {
       vy: 0,
       vrot: 0,
     };
-    this.active.set(id, entry);
+    this.active.set(domId, entry);
     return entry;
   }
 }

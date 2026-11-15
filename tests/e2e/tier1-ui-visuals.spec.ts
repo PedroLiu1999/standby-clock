@@ -105,6 +105,7 @@ test.describe('Tier 1 — UI, Visuals, Clock Reactions & Persistence (F8–F11)'
       expect(await getParticles(page).count()).toBe(0);
 
       // Sleeping -> zzz particles
+      await page.mouse.move(10, 10);
       await getSleepButton(page).click();
       await stepClock(page, 800);
       expect(await getParticles(page).count()).toBeGreaterThan(0);

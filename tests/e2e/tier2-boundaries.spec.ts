@@ -716,6 +716,7 @@ test.describe('Tier 2: Boundary & Corner Cases', () => {
       await stepClock(page, 3000);
       expect(await getParticles(page).count()).toBe(0);
 
+      await page.mouse.move(10, 10);
       await getTogglePetButton(page).click();
       await expect(getPet(page)).toBeVisible();
     });

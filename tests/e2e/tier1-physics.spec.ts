@@ -275,10 +275,10 @@ test.describe('Tier 1 — Physics & Clock Colliders (F1–F4)', () => {
       await setupClock(page);
       const stageBox = await getBox(getStage(page));
 
-      await dragPetTo(page, stageBox.x + 700, stageBox.y + 420, {
+      await dragPetTo(page, stageBox.x + 320, stageBox.y + 420, {
         holdMsBeforeUp: 120,
       });
-      await dragPetTo(page, stageBox.x + 520, stageBox.y + 240, {
+      await dragPetTo(page, stageBox.x + 140, stageBox.y + 240, {
         steps: 5,
         stepMs: 12,
       });

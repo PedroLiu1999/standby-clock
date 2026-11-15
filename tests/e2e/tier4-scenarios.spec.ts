@@ -52,6 +52,7 @@ test.describe('Tier 4: Real-World End-User Scenarios', () => {
     await expect(getAmPm(page)).toHaveText('PM');
 
     // Feed pet as reward
+    await page.mouse.move(10, 10);
     await getFeedButton(page).click();
     await stepClock(page, 5000);
 
@@ -83,11 +84,13 @@ test.describe('Tier 4: Real-World End-User Scenarios', () => {
 
     // Wake and feed in the morning
     if ((await getPetState(page)) === 'sleeping') {
+      await page.mouse.move(10, 10);
       await getSleepButton(page).click();
       await stepClock(page, 300);
     }
     expect(await getPetState(page)).not.toBe('sleeping');
 
+    await page.mouse.move(10, 10);
     await getFeedButton(page).click();
     await stepClock(page, 4000);
     await expect(getPet(page)).toBeVisible();
