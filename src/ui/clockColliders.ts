@@ -200,11 +200,13 @@ export class ClockColliderManager {
       }
     }
 
+    const footContactOffset = height > 60 ? 4 : 0;
+
     return {
       x,
-      y: inkTop - stageRect.top,
+      y: inkTop - stageRect.top + footContactOffset,
       width,
-      height,
+      height: Math.max(1, height - footContactOffset),
     };
   }
 
